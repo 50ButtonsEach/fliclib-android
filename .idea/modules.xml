@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/FlicLibProj.iml" filepath="$PROJECT_DIR$/FlicLibProj.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fliclib/fliclib.iml" filepath="$PROJECT_DIR$/fliclib/fliclib.iml" />
+    </modules>
+  </component>
+</project>
