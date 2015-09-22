@@ -5,7 +5,7 @@ package io.flic.lib;
 import io.flic.lib.IFlicLibCallbackInterface;
 
 interface IFlicLibInterface {
-    long registerCallback(IFlicLibCallbackInterface cb);
+    long registerCallback(IFlicLibCallbackInterface cb, String appId, String appSecret);
     void unregisterCallback(long id);
 
     void listenForConnectionCallbacks(long id, String mac);

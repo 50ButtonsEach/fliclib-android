@@ -49,6 +49,9 @@ public final class FlicManager {
 	private SecureRandom mSecRand = new SecureRandom();
 	private byte[] mLastPrivateCurve25519Key;
 
+	private String mAppId;
+	private String mAppSecret;
+
 	final Object mIntfLock = new Object();
 	boolean isInitializing;
 	IFlicLibInterface mIntf;
@@ -66,11 +69,30 @@ public final class FlicManager {
 	private FlicManager() {}
 
 	/**
+	 * Set the App credentials.
+	 *
+	 * The credentials can only be set once.
+	 *
+	 * @param appId App ID
+	 * @param appSecret App Secret
+	 */
+	public static void setAppCredentials(String appId, String appSecret) {
+		if (instance.mAppId == null) {
+			instance.mAppId = appId;
+		}
+		if (instance.mAppSecret == null) {
+			instance.mAppSecret = appSecret;
+		}
+	}
+
+	/**
 	 * Get the singleton instance of the manager.
 	 *
 	 * @param context An application/service/activity context. {@link Context#getApplicationContext()} on this object will be the context to use.
 	 * @param initializedCallback A callback that will be called with the manager as parameter.
 	 *
+	 * @throws IllegalArgumentException If context or initializedCallback is null.
+	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String)}.
 	 * @throws AssertionError If the Flic Application is not installed.
 	 */
 	public static void getInstance(Context context, FlicManagerInitializedCallback initializedCallback) {
@@ -84,6 +106,8 @@ public final class FlicManager {
 	 * @param initializedCallback A callback that will be called with the manager as parameter.
 	 * @param uninitializedCallback If non-null, a callback that will be called if the Flic Application exits, or when {@link FlicManager#destroyInstance()} is called.
 	 *
+	 * @throws IllegalArgumentException If context or initializedCallback is null.
+	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String)}.
 	 * @throws AssertionError If the Flic Application is not installed.
 	 */
 	public static void getInstance(Context context, FlicManagerInitializedCallback initializedCallback, FlicManagerUninitializedCallback uninitializedCallback) {
@@ -96,6 +120,10 @@ public final class FlicManager {
 		instance.getInstanceInternal(context, initializedCallback, uninitializedCallback);
 	}
 	private void getInstanceInternal(Context context, FlicManagerInitializedCallback initializedCallback, FlicManagerUninitializedCallback uninitializedCallback) {
+		if (mAppId == null || mAppSecret == null) {
+			throw new NullPointerException("App credentials were not provided");
+		}
+
 		synchronized (mIntfLock) {
 			mInitializedCallbacks.add(initializedCallback);
 			if (uninitializedCallback != null) {
@@ -262,6 +290,7 @@ public final class FlicManager {
 		context = context.getApplicationContext();
 		mContext = context;
 		mFlicManagerCallback = flicManagerCallback;
+
 		mDb = new DB(context.getApplicationContext());
 		Intent intent = new Intent();
 		intent.setClassName("io.flic.app", "io.flic.app.FlicService");
@@ -271,7 +300,7 @@ public final class FlicManager {
 				synchronized (mIntfLock) {
 					IFlicLibInterface intf = IFlicLibInterface.Stub.asInterface(service);
 					try {
-						mIntfId = intf.registerCallback(mCallbackIntf);
+						mIntfId = intf.registerCallback(mCallbackIntf, mAppId, mAppSecret);
 						mIntf = intf;
 					} catch (RemoteException e) {
 						e.printStackTrace();
@@ -371,12 +400,16 @@ public final class FlicManager {
 	 */
 	public void initiateGrabButton(Activity currentActivity) {
 		Intent intent = new Intent("io.flic.app.GrabButton");
+		intent.setPackage("io.flic.app");
 		byte[] secretKey = new byte[32];
 		byte[] publicKey = new byte[32];
 		mSecRand.nextBytes(secretKey);
 		Curve25519.keygen(publicKey, secretKey);
 		mLastPrivateCurve25519Key = secretKey;
 		intent.putExtra("token", publicKey);
+		intent.putExtra("intfId", mIntfId);
+		intent.putExtra("appId", mAppId);
+		intent.putExtra("appSecret", mAppSecret);
 		currentActivity.startActivityForResult(intent, GRAB_BUTTON_REQUEST_CODE);
 	}
 
