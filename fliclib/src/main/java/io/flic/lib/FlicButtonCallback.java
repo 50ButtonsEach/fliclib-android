@@ -92,4 +92,12 @@ public class FlicButtonCallback {
 	 * @param isHold True if hold, else false
 	 */
 	public void onButtonSingleOrDoubleClickOrHold(FlicButton button, boolean wasQueued, int timeDiff, boolean isSingleClick, boolean isDoubleClick, boolean isHold) {}
+
+	/**
+	 * Called when the button was removed in the Flic App, or when the user disconnected this app from the button in the Flic App (if so the button can be grabbed again as usual).
+	 * This object cannot be used any more.
+	 *
+	 * @param button The button
+	 */
+	public void onButtonRemoved(FlicButton button) {}
 }

@@ -5,7 +5,7 @@ package io.flic.lib;
 import io.flic.lib.IFlicLibCallbackInterface;
 
 interface IFlicLibInterface {
-    long registerCallback(IFlicLibCallbackInterface cb, String appId, String appSecret);
+    long registerCallback(IFlicLibCallbackInterface cb, String appId, String appSecret, String appName);
     void unregisterCallback(long id);
 
     void listenForConnectionCallbacks(long id, String mac);
@@ -15,4 +15,6 @@ interface IFlicLibInterface {
     String getColor(long id, String mac);
     boolean readRemoteRSSI(long id, String mac);
     void setActiveMode(long id, String mac, boolean activeMode);
+    void grabExclusivity(long id, String mac);
+    void releaseExclusivity(long id, String mac);
 }

@@ -96,6 +96,52 @@ public final class FlicButton {
 		return false;
 	}
 
+
+	/**
+	 * Grab a button exclusivity.
+	 *
+	 * This means that this app is the only one receiving button events.
+	 * Please release this exclusivity with {@link #releaseExclusivity} when you're done.
+	 *
+	 * @return true on success, false if manager was in uninitialized state
+	 */
+	public boolean grabExclusivity() {
+		checkNotForgotten();
+		synchronized (manager.mIntfLock) {
+			if (manager.mIntf != null) {
+				try {
+					manager.mIntf.grabExclusivity(manager.mIntfId, mac);
+					return true;
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Release a button exclusivity.
+	 *
+	 * Call this after {@link #grabExclusivity} when you're done with the button.
+	 *
+	 * @return true on success, false if manager was in uninitialized state
+	 */
+	public boolean releaseExclusivity() {
+		checkNotForgotten();
+		synchronized (manager.mIntfLock) {
+			if (manager.mIntf != null) {
+				try {
+					manager.mIntf.releaseExclusivity(manager.mIntfId, mac);
+					return true;
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Get the current callback flags.
 	 *

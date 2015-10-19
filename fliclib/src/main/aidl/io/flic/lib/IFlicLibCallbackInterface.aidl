@@ -13,4 +13,6 @@ interface IFlicLibCallbackInterface {
     void onButtonClickOrHold(String mac, boolean wasQueued, int timeDiff, int action);
     void onButtonSingleOrDoubleClick(String mac, boolean wasQueued, int timeDiff, int action);
     void onButtonSingleOrDoubleClickOrHold(String mac, boolean wasQueued, int timeDiff, int action);
+
+    void onButtonRemoved(String mac);
 }

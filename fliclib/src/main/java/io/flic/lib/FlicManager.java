@@ -51,6 +51,7 @@ public final class FlicManager {
 
 	private String mAppId;
 	private String mAppSecret;
+	private String mAppName;
 
 	final Object mIntfLock = new Object();
 	boolean isInitializing;
@@ -75,13 +76,17 @@ public final class FlicManager {
 	 *
 	 * @param appId App ID
 	 * @param appSecret App Secret
+	 * @param appName App name that will be shown to the user in the Flic App
 	 */
-	public static void setAppCredentials(String appId, String appSecret) {
+	public static void setAppCredentials(String appId, String appSecret, String appName) {
 		if (instance.mAppId == null) {
 			instance.mAppId = appId;
 		}
 		if (instance.mAppSecret == null) {
 			instance.mAppSecret = appSecret;
+		}
+		if (instance.mAppName == null) {
+			instance.mAppName = appName;
 		}
 	}
 
@@ -92,7 +97,7 @@ public final class FlicManager {
 	 * @param initializedCallback A callback that will be called with the manager as parameter.
 	 *
 	 * @throws IllegalArgumentException If context or initializedCallback is null.
-	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String)}.
+	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String, String)}.
 	 * @throws AssertionError If the Flic Application is not installed.
 	 */
 	public static void getInstance(Context context, FlicManagerInitializedCallback initializedCallback) {
@@ -107,7 +112,7 @@ public final class FlicManager {
 	 * @param uninitializedCallback If non-null, a callback that will be called if the Flic Application exits, or when {@link FlicManager#destroyInstance()} is called.
 	 *
 	 * @throws IllegalArgumentException If context or initializedCallback is null.
-	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String)}.
+	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String, String)}.
 	 * @throws AssertionError If the Flic Application is not installed.
 	 */
 	public static void getInstance(Context context, FlicManagerInitializedCallback initializedCallback, FlicManagerUninitializedCallback uninitializedCallback) {
@@ -120,7 +125,7 @@ public final class FlicManager {
 		instance.getInstanceInternal(context, initializedCallback, uninitializedCallback);
 	}
 	private void getInstanceInternal(Context context, FlicManagerInitializedCallback initializedCallback, FlicManagerUninitializedCallback uninitializedCallback) {
-		if (mAppId == null || mAppSecret == null) {
+		if (mAppId == null || mAppSecret == null || mAppName == null) {
 			throw new NullPointerException("App credentials were not provided");
 		}
 
@@ -157,11 +162,17 @@ public final class FlicManager {
 		}
 	}
 
+	FlicButton synchronizedGetButton(String mac) {
+		synchronized (mKnownButtons) {
+			return mKnownButtons.get(mac);
+		}
+	}
+
 	IFlicLibCallbackInterface mCallbackIntf = new IFlicLibCallbackInterface.Stub() {
 		@Override
 		public void onConnect(String mac) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -174,7 +185,7 @@ public final class FlicManager {
 		@Override
 		public void onReady(String mac) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -187,7 +198,7 @@ public final class FlicManager {
 		@Override
 		public void onDisconnect(String mac, int flicError) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -200,7 +211,7 @@ public final class FlicManager {
 		@Override
 		public void onConnectionFailed(String mac, int status) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -213,7 +224,7 @@ public final class FlicManager {
 		@Override
 		public void onReadRemoteRSSI(String mac, int rssi, int status) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -227,7 +238,7 @@ public final class FlicManager {
 		public void onButtonUpOrDown(String mac, boolean wasQueued, int timeDiff, int action) {
 			Log.d(TAG, "onButtonUpOrDown");
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -240,7 +251,7 @@ public final class FlicManager {
 		@Override
 		public void onButtonClickOrHold(String mac, boolean wasQueued, int timeDiff, int action) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -253,7 +264,7 @@ public final class FlicManager {
 		@Override
 		public void onButtonSingleOrDoubleClick(String mac, boolean wasQueued, int timeDiff, int action) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
@@ -266,13 +277,27 @@ public final class FlicManager {
 		@Override
 		public void onButtonSingleOrDoubleClickOrHold(String mac, boolean wasQueued, int timeDiff, int action) {
 			mac = mac.toLowerCase();
-			FlicButton button = mKnownButtons.get(mac);
+			FlicButton button = synchronizedGetButton(mac);
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
 						cb.onButtonSingleOrDoubleClickOrHold(button, wasQueued, timeDiff, action == 0, action == 1, action == 2);
 					}
 				}
+			}
+		}
+
+		@Override
+		public void onButtonRemoved(String mac) {
+			mac = mac.toLowerCase();
+			FlicButton button = synchronizedGetButton(mac);
+			if (button != null) {
+				synchronized (button.callbacks) {
+					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
+						cb.onButtonRemoved(button);
+					}
+				}
+				forgetButton(button);
 			}
 		}
 	};
@@ -300,7 +325,7 @@ public final class FlicManager {
 				synchronized (mIntfLock) {
 					IFlicLibInterface intf = IFlicLibInterface.Stub.asInterface(service);
 					try {
-						mIntfId = intf.registerCallback(mCallbackIntf, mAppId, mAppSecret);
+						mIntfId = intf.registerCallback(mCallbackIntf, mAppId, mAppSecret, mAppName);
 						mIntf = intf;
 					} catch (RemoteException e) {
 						e.printStackTrace();
@@ -529,6 +554,7 @@ public final class FlicManager {
 				button.setFlicButtonCallbackFlags(0);
 				button.removeAllFlicButtonCallbacks();
 				mDb.removeButton(button.mac);
+				button.forgotten = true;
 				synchronized (mIntfLock) {
 					if (mIntf != null) {
 						try {
