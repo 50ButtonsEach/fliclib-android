@@ -17,4 +17,9 @@ interface IFlicLibInterface {
     void setActiveMode(long id, String mac, boolean activeMode);
     void grabExclusivity(long id, String mac);
     void releaseExclusivity(long id, String mac);
+
+    boolean validateIntent(long id, in Bundle bundle);
+    List<String> listButtons(long id);
+    void removeButton(long id, String mac);
+    void registerListenForBroadcast(long id, String mac, int flags);
 }

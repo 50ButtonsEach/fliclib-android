@@ -5,7 +5,7 @@ import android.content.Context;
 /**
  * FlicManagerInitializedCallback.
  */
-public class FlicManagerInitializedCallback {
+public interface FlicManagerInitializedCallback {
 	/**
 	 * Called once when the manager has been initialized.
 	 * This is called on the UI thread shortly after {@link FlicManager#getInstance(Context, FlicManagerInitializedCallback)}
@@ -13,7 +13,5 @@ public class FlicManagerInitializedCallback {
 	 *
 	 * @param manager The manager
 	 */
-	public void onInitialized(FlicManager manager) {
-
-	}
+	void onInitialized(FlicManager manager);
 }

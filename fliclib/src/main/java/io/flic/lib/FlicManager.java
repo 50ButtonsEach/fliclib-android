@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Parcel;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -40,7 +41,6 @@ public final class FlicManager {
 
 	private static FlicManager instance = new FlicManager();
 	private Context mContext;
-	private DB mDb;
 	private ServiceConnection mServiceConnection;
 	private FlicManagerCallback mFlicManagerCallback;
 	private List<FlicManagerInitializedCallback> mInitializedCallbacks = new ArrayList<>();
@@ -90,6 +90,10 @@ public final class FlicManager {
 		}
 	}
 
+	static boolean hasSetAppCredentials() {
+		return instance.mAppId != null && instance.mAppSecret != null && instance.mAppName != null;
+	}
+
 	/**
 	 * Get the singleton instance of the manager.
 	 *
@@ -125,22 +129,24 @@ public final class FlicManager {
 		instance.getInstanceInternal(context, initializedCallback, uninitializedCallback);
 	}
 	private void getInstanceInternal(Context context, FlicManagerInitializedCallback initializedCallback, FlicManagerUninitializedCallback uninitializedCallback) {
-		if (mAppId == null || mAppSecret == null || mAppName == null) {
+		if (!hasSetAppCredentials()) {
 			throw new NullPointerException("App credentials were not provided");
 		}
 
 		synchronized (mIntfLock) {
-			mInitializedCallbacks.add(initializedCallback);
 			if (uninitializedCallback != null) {
 				mUninitializedCallbacks.add(uninitializedCallback);
+			}
+			if (mIntf == null || isInitializing) {
+				mInitializedCallbacks.add(initializedCallback);
 			}
 			if (mIntf == null && !isInitializing) {
 				isInitializing = true;
 				init(context, new FlicManagerCallback() {
 					@Override
 					public void onInitialized() {
-						isInitializing = false;
 						synchronized (mIntfLock) {
+							isInitializing = false;
 							for (FlicManagerInitializedCallback cb : mInitializedCallbacks) {
 								cb.onInitialized(FlicManager.this);
 							}
@@ -158,6 +164,8 @@ public final class FlicManager {
 						}
 					}
 				});
+			} else if (mIntf != null && !isInitializing) {
+				initializedCallback.onInitialized(this);
 			}
 		}
 	}
@@ -316,7 +324,6 @@ public final class FlicManager {
 		mContext = context;
 		mFlicManagerCallback = flicManagerCallback;
 
-		mDb = new DB(context.getApplicationContext());
 		Intent intent = new Intent();
 		intent.setClassName("io.flic.app", "io.flic.app.FlicService");
 		mServiceConnection = new ServiceConnection() {
@@ -332,14 +339,17 @@ public final class FlicManager {
 					}
 				}
 				synchronized (mKnownButtons) {
-					mKnownButtons.putAll(mDb.getButtons(FlicManager.this));
-					for (FlicButton button : mKnownButtons.values()) {
-						try {
+					try {
+						List<String> addresses = mIntf.listButtons(mIntfId);
+						for (String address : addresses) {
+							mKnownButtons.put(address, new FlicButton(FlicManager.this, address));
+						}
+						for (FlicButton button : mKnownButtons.values()) {
 							mIntf.listenForConnectionCallbacks(mIntfId, button.mac);
 							mIntf.setButtonCallbacks(mIntfId, button.mac, button.callbackFlags);
-						} catch (RemoteException e) {
-							e.printStackTrace();
 						}
+					} catch (RemoteException e) {
+						e.printStackTrace();
 					}
 				}
 				if (mFlicManagerCallback != null) {
@@ -508,6 +518,7 @@ public final class FlicManager {
 
 		byte[] sharedSecret = new byte[32];
 		Curve25519.curve(sharedSecret, mLastPrivateCurve25519Key, buttonPublicCurve25519Key);
+		mLastPrivateCurve25519Key = null;
 
 		MessageDigest md = Utils.createSHA256();
 		md.update(sharedSecret);
@@ -521,7 +532,6 @@ public final class FlicManager {
 			FlicButton flicButton = mKnownButtons.get(mac);
 			if (flicButton == null) {
 				flicButton = new FlicButton(this, mac);
-				mDb.addButton(mac);
 				mKnownButtons.put(mac, flicButton);
 			}
 
@@ -545,7 +555,7 @@ public final class FlicManager {
 	 * Disposes a button object and removes it from the internal list of known buttons.
 	 * You will no longer get callbacks for this button.
 	 *
-	 * @param button
+	 * @param button A button
 	 */
 	public void forgetButton(FlicButton button) {
 		synchronized (mKnownButtons) {
@@ -553,11 +563,11 @@ public final class FlicManager {
 				mKnownButtons.remove(button.mac);
 				button.setFlicButtonCallbackFlags(0);
 				button.removeAllFlicButtonCallbacks();
-				mDb.removeButton(button.mac);
 				button.forgotten = true;
 				synchronized (mIntfLock) {
 					if (mIntf != null) {
 						try {
+							mIntf.removeButton(mIntfId, button.mac);
 							mIntf.unListenForConnectionCallbacks(mIntfId, button.mac);
 						} catch (RemoteException e) {
 							e.printStackTrace();
@@ -566,5 +576,16 @@ public final class FlicManager {
 				}
 			}
 		}
+	}
+
+	boolean validateIntent(Intent intent) {
+		synchronized (mIntfLock) {
+			try {
+				return mIntf.validateIntent(mIntfId, intent.getExtras());
+			} catch(RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+		return false;
 	}
 }

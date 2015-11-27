@@ -1,50 +1,67 @@
 package io.flic.lib;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
+
 /**
- * FlicButtonCallback
- *
- * Callbacks for button updates. You should extend this class and implement the callbacks you want.
+ * Broadcast receiver for events from the Flic App.
+ * Extend this class and implement the methods you want to get events for.
+ * To activate events, call {@link FlicButton#registerListenForBroadcast(int)}.
+ * See also {@link FlicBroadcastReceiverFlags}.
  */
-public class FlicButtonCallback {
-	/**
-	 * Called when the Bluetooth connection has just been started.
-	 * It's not ready for use yet however - {@link FlicButtonCallback#onConnectionCompleted(FlicButton)} will be called when ready.
-	 *
-	 * @param button The button
-	 */
-	public void onConnectionStarted(FlicButton button) {}
+public abstract class FlicBroadcastReceiver extends BroadcastReceiver {
+	private static final String TAG = "FlicBroadcastReceiver";
+
+	public final void onReceive(Context context, final Intent intent) {
+		if (!FlicManager.hasSetAppCredentials()) {
+			onRequestAppCredentials();
+		}
+		FlicManager.getInstance(context, new FlicManagerInitializedCallback() {
+			@Override
+			public void onInitialized(FlicManager manager) {
+				if (!manager.validateIntent(intent)) {
+					Log.d(TAG, "Invalid intent received");
+					return;
+				}
+
+				String deviceId = intent.getStringExtra(FlicIntentExtras.BUTTON_ID);
+				FlicButton button = manager.getButtonByDeviceId(deviceId);
+				if (button == null) { // For removed
+					button = new FlicButton(manager, deviceId);
+				}
+
+				String value = intent.getStringExtra(FlicIntentExtras.VALUE);
+
+				switch (intent.getStringExtra(FlicIntentExtras.TYPE)) {
+					case FlicIntentTypes.UP_OR_DOWN:
+						onButtonUpOrDown(button, intent.getBooleanExtra(FlicIntentExtras.WAS_QUEUED, false), intent.getIntExtra(FlicIntentExtras.TIME_DIFF, 0), value.equals(FlicIntentValues.UP), value.equals(FlicIntentValues.DOWN));
+						break;
+					case FlicIntentTypes.CLICK_OR_HOLD:
+						onButtonClickOrHold(button, intent.getBooleanExtra(FlicIntentExtras.WAS_QUEUED, false), intent.getIntExtra(FlicIntentExtras.TIME_DIFF, 0), value.equals(FlicIntentValues.CLICK), value.equals(FlicIntentValues.HOLD));
+						break;
+					case FlicIntentTypes.SINGLE_OR_DOUBLE_CLICK:
+						onButtonSingleOrDoubleClick(button, intent.getBooleanExtra(FlicIntentExtras.WAS_QUEUED, false), intent.getIntExtra(FlicIntentExtras.TIME_DIFF, 0), value.equals(FlicIntentValues.SINGLE_CLICK), value.equals(FlicIntentValues.DOUBLE_CLICK));
+						break;
+					case FlicIntentTypes.SINGLE_OR_DOUBLE_CLICK_OR_HOLD:
+						onButtonSingleOrDoubleClickOrHold(button, intent.getBooleanExtra(FlicIntentExtras.WAS_QUEUED, false), intent.getIntExtra(FlicIntentExtras.TIME_DIFF, 0), value.equals(FlicIntentValues.SINGLE_CLICK), value.equals(FlicIntentValues.DOUBLE_CLICK), value.equals(FlicIntentValues.HOLD));
+						break;
+					case FlicIntentTypes.REMOVED:
+						onButtonRemoved(button);
+						button.forgotten = true;
+						break;
+				}
+			}
+		});
+	}
 
 	/**
-	 * Called if there was a problem establishing a Bluetooth connection to the button. Happens very rarely.
+	 * Sets app credentials.
 	 *
-	 * @param button The button
-	 * @param status A Bluetooth GATT status.
+	 * In this method, call {@link FlicManager#setAppCredentials(String, String, String)} and set the appropriate app credentials.
 	 */
-	public void onConnectionFailed(FlicButton button, int status) {}
-
-	/**
-	 * Called when the Bluetooth connection was disconnected, for example if the button becomes out of range or the user manually disconnecting this button in the Flic Application.
-	 *
-	 * @param button The button
-	 * @param flicError An error
-	 */
-	public void onDisconnect(FlicButton button, int flicError) {}
-
-	/**
-	 * Called when the connection to the button has been established and is ready to use.
-	 *
-	 * @param button The button
-	 */
-	public void onConnectionCompleted(FlicButton button) {}
-
-	/**
-	 * Called as a result of {@link FlicButton#readRemoteRSSI()}.
-	 *
-	 * @param button The button
-	 * @param rssi RSSI value for the remote device
-	 * @param status 0 if the RSSI was read successfully
-	 */
-	public void onReadRemoteRSSI(FlicButton button, int rssi, int status) {}
+	protected abstract void onRequestAppCredentials();
 
 	/**
 	 * Called when the button was pressed or released.

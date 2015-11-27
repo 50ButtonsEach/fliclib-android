@@ -22,7 +22,7 @@ public final class FlicButton {
 	boolean forgotten = false;
 	FlicManager manager;
 	String mac;
-	ArrayList<FlicButtonCallback> callbacks = new ArrayList<>();
+	final ArrayList<FlicButtonCallback> callbacks = new ArrayList<>();
 	int callbackFlags = FlicButtonCallbackFlags.ALL;
 
 	FlicButton(FlicManager manager, String mac) {
@@ -87,6 +87,28 @@ public final class FlicButton {
 				try {
 					manager.mIntf.setButtonCallbacks(manager.mIntfId, mac, flicButtonCallbackFlags);
 					callbackFlags = flicButtonCallbackFlags;
+					return true;
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * To receive button clicks in the case the app is not currently running, you can set up a
+	 * broadcast receiver with intent filter io.flic.FLICLIB_EVENT.
+	 *
+	 * @param flicButtonCallbackFlags A bitwise-or'ed value of {@link FlicButtonCallbackFlags}
+	 * @return true on success, false if manager was in uninitialized state
+	 */
+	public boolean registerListenForBroadcast(int flicButtonCallbackFlags) {
+		checkNotForgotten();
+		synchronized (manager.mIntfLock) {
+			if (manager.mIntf != null) {
+				try {
+					manager.mIntf.registerListenForBroadcast(manager.mIntfId, mac, flicButtonCallbackFlags);
 					return true;
 				} catch (RemoteException e) {
 					e.printStackTrace();
