@@ -100,15 +100,15 @@ public final class FlicButton {
 	 * To receive button clicks in the case the app is not currently running, you can set up a
 	 * broadcast receiver with intent filter io.flic.FLICLIB_EVENT.
 	 *
-	 * @param flicButtonCallbackFlags A bitwise-or'ed value of {@link FlicButtonCallbackFlags}
+	 * @param flicBroadcastReceiverFlags A bitwise-or'ed value of {@link FlicBroadcastReceiverFlags}
 	 * @return true on success, false if manager was in uninitialized state
 	 */
-	public boolean registerListenForBroadcast(int flicButtonCallbackFlags) {
+	public boolean registerListenForBroadcast(int flicBroadcastReceiverFlags) {
 		checkNotForgotten();
 		synchronized (manager.mIntfLock) {
 			if (manager.mIntf != null) {
 				try {
-					manager.mIntf.registerListenForBroadcast(manager.mIntfId, mac, flicButtonCallbackFlags);
+					manager.mIntf.registerListenForBroadcast(manager.mIntfId, mac, flicBroadcastReceiverFlags);
 					return true;
 				} catch (RemoteException e) {
 					e.printStackTrace();
