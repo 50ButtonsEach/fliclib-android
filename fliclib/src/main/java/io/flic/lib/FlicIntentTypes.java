@@ -3,7 +3,7 @@ package io.flic.lib;
 /**
  * Represents possible values for the intent extra {@link FlicIntentExtras#TYPE}.
  */
-public class FlicIntentTypes {
+class FlicIntentTypes {
 	/**
 	 * Indicates that the button was pressed or released.
 	 * See {@link FlicIntentValues#UP} and {@link FlicIntentValues#DOWN}.

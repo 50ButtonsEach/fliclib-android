@@ -26,9 +26,8 @@ public class FlicButtonCallback {
 	 * Called when the Bluetooth connection was disconnected, for example if the button becomes out of range or the user manually disconnecting this button in the Flic Application.
 	 *
 	 * @param button The button
-	 * @param flicError An error
 	 */
-	public void onDisconnect(FlicButton button, int flicError) {}
+	public void onDisconnect(FlicButton button) {}
 
 	/**
 	 * Called when the connection to the button has been established and is ready to use.

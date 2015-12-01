@@ -1,9 +1,9 @@
 package io.flic.lib;
 
 /**
- * Created by Emil on 2015-11-17.
+ * Represents possible values of {@link FlicIntentExtras#VALUE}.
  */
-public class FlicIntentValues {
+class FlicIntentValues {
 	/**
 	 * Indicates that the button was released.
 	 * Possible value for {@link FlicIntentExtras#VALUE} when {@link FlicIntentExtras#TYPE} is {@link FlicIntentTypes#UP_OR_DOWN}.

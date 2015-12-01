@@ -1,9 +1,9 @@
 package io.flic.lib;
 
 /**
- * Created by Emil on 2015-11-16.
+ * Intent extras of flic event intents.
  */
-public class FlicIntentExtras {
+class FlicIntentExtras {
 	/**
 	 * Contains the button identifier (Bluetooth Address).
 	 */

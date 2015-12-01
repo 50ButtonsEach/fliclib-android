@@ -103,8 +103,8 @@ public final class FlicManager {
 	 * @param initializedCallback A callback that will be called with the manager as parameter.
 	 *
 	 * @throws IllegalArgumentException If context or initializedCallback is null.
-	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String, String)}.
-	 * @throws AssertionError If the Flic Application is not installed.
+	 * @throws AppCredentialsNotProvidedException If App credentials were not provided. See {@link #setAppCredentials(String, String, String)}.
+	 * @throws FlicAppNotInstalledException If the Flic Application is not installed.
 	 */
 	public static void getInstance(Context context, FlicManagerInitializedCallback initializedCallback) {
 		getInstance(context, initializedCallback, null);
@@ -118,8 +118,8 @@ public final class FlicManager {
 	 * @param uninitializedCallback If non-null, a callback that will be called if the Flic Application exits, or when {@link FlicManager#destroyInstance()} is called.
 	 *
 	 * @throws IllegalArgumentException If context or initializedCallback is null.
-	 * @throws NullPointerException If App credentials were not provided. See {@link #setAppCredentials(String, String, String)}.
-	 * @throws AssertionError If the Flic Application is not installed.
+	 * @throws AppCredentialsNotProvidedException If App credentials were not provided. See {@link #setAppCredentials(String, String, String)}.
+	 * @throws FlicAppNotInstalledException If the Flic Application is not installed.
 	 */
 	public static void getInstance(Context context, FlicManagerInitializedCallback initializedCallback, FlicManagerUninitializedCallback uninitializedCallback) {
 		if (context == null) {
@@ -132,7 +132,7 @@ public final class FlicManager {
 	}
 	private void getInstanceInternal(Context context, FlicManagerInitializedCallback initializedCallback, FlicManagerUninitializedCallback uninitializedCallback) {
 		if (!hasSetAppCredentials()) {
-			throw new NullPointerException("App credentials were not provided");
+			throw new AppCredentialsNotProvidedException("App credentials were not provided");
 		}
 
 		synchronized (mIntfLock) {
@@ -212,7 +212,7 @@ public final class FlicManager {
 			if (button != null) {
 				synchronized (button.callbacks) {
 					for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>)button.callbacks.clone()) {
-						cb.onDisconnect(button, flicError);
+						cb.onDisconnect(button);
 					}
 				}
 			}
@@ -377,7 +377,7 @@ public final class FlicManager {
 			isInitializing = false;
 			mInitializedCallbacks.clear();
 			mUninitializedCallbacks.clear();
-			throw new AssertionError("Flic Application is not installed");
+			throw new FlicAppNotInstalledException("Flic Application is not installed");
 		}
 	}
 
