@@ -41,6 +41,7 @@ public final class FlicManager {
 
 	private static FlicManager instance = new FlicManager();
 	private Context mContext;
+	private DB mDb;
 	private ServiceConnection mServiceConnection;
 	private FlicManagerCallback mFlicManagerCallback;
 	private List<FlicManagerInitializedCallback> mInitializedCallbacks = new ArrayList<>();
@@ -73,6 +74,7 @@ public final class FlicManager {
 	 * Set the App credentials.
 	 *
 	 * The credentials can only be set once.
+	 * Setting them again is a no-op.
 	 *
 	 * @param appId App ID
 	 * @param appSecret App Secret
@@ -324,6 +326,7 @@ public final class FlicManager {
 		mContext = context;
 		mFlicManagerCallback = flicManagerCallback;
 
+		mDb = new DB(context.getApplicationContext());
 		Intent intent = new Intent();
 		intent.setClassName("io.flic.app", "io.flic.app.FlicService");
 		mServiceConnection = new ServiceConnection() {
@@ -340,9 +343,12 @@ public final class FlicManager {
 				}
 				synchronized (mKnownButtons) {
 					try {
+						List<String> verifiedButtons = mDb.getButtons();
 						List<String> addresses = mIntf.listButtons(mIntfId);
 						for (String address : addresses) {
-							mKnownButtons.put(address, new FlicButton(FlicManager.this, address));
+							if (verifiedButtons.contains(address)) {
+								mKnownButtons.put(address, new FlicButton(FlicManager.this, address));
+							}
 						}
 						for (FlicButton button : mKnownButtons.values()) {
 							mIntf.listenForConnectionCallbacks(mIntfId, button.mac);
@@ -401,9 +407,9 @@ public final class FlicManager {
 	}
 
 	/**
-	 * Get a button by its MAC-address.
+	 * Get a button by its Bluetooth device address.
 	 *
-	 * @param deviceId The MAC address case insensitive.
+	 * @param deviceId The Bluetooth device address case insensitive.
 	 * @return A button object or null if it has not been grabbed before.
 	 */
 	public FlicButton getButtonByDeviceId(String deviceId) {
@@ -415,6 +421,8 @@ public final class FlicManager {
 
 	/**
 	 * Get a copy of the internal list of buttons.
+	 *
+	 * This is a list of all previously grabbed buttons that have not been removed.
 	 *
 	 * @return The list
 	 */
@@ -533,6 +541,7 @@ public final class FlicManager {
 			if (flicButton == null) {
 				flicButton = new FlicButton(this, mac);
 				mKnownButtons.put(mac, flicButton);
+				mDb.addButton(mac);
 			}
 
 			synchronized (mIntfLock) {
@@ -563,6 +572,7 @@ public final class FlicManager {
 				mKnownButtons.remove(button.mac);
 				button.setFlicButtonCallbackFlags(0);
 				button.removeAllFlicButtonCallbacks();
+				mDb.removeButton(button.mac);
 				button.forgotten = true;
 				synchronized (mIntfLock) {
 					if (mIntf != null) {

@@ -6,6 +6,7 @@ package io.flic.lib;
  * These can be bitwise-or'ed together.
  */
 public class FlicBroadcastReceiverFlags {
+	public static final int NONE = 0;
 	public static final int UP_OR_DOWN = 1;
 	public static final int CLICK_OR_HOLD = 2;
 	public static final int CLICK_OR_DOUBLE_CLICK = 4;

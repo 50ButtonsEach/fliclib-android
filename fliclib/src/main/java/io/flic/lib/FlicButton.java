@@ -40,6 +40,7 @@ public final class FlicButton {
 	 * Add callbacks for this button.
 	 * The callbacks remain valid during the lifetime of the application process or until you call {@link FlicManager#forgetButton(FlicButton)} for this button.
 	 * Callbacks are not called during the manager is not in the initialized state.
+	 * In order to receive callbacks, {@link #setFlicButtonCallbackFlags(int)} must be called first.
 	 *
 	 * @param callback The callback object
 	 */
@@ -75,7 +76,12 @@ public final class FlicButton {
 	/**
 	 * Set which button events to listen for.
 	 *
+	 * In order to get callbacks added by {@link #addFlicButtonCallback(FlicButtonCallback)},
+	 * this method must be called first.
+	 *
 	 * If you are concerned about low latencies and performance, only register the flags you actually use.
+	 *
+	 * The settings are active as long as the process is running and must be set again when the app process restarts.
 	 *
 	 * @param flicButtonCallbackFlags A bitwise-or'ed value of {@link FlicButtonCallbackFlags}
 	 * @return true on success, false if manager was in uninitialized state
@@ -97,8 +103,14 @@ public final class FlicButton {
 	}
 
 	/**
-	 * To receive button clicks in the case the app is not currently running, you can set up a
-	 * broadcast receiver with intent filter io.flic.FLICLIB_EVENT.
+	 * To receive button clicks that also works in the case the app is not currently running, you
+	 * can set up a broadcast receiver extending {@link FlicBroadcastReceiver}.
+	 * Declare it in your manifest and set android:exported to true and add an intent-filter
+	 * with the name io.flic.FLICLIB_EVENT.
+	 *
+	 * To unregister all events, use {@link FlicBroadcastReceiverFlags#NONE}.
+	 *
+	 * The settings will remain even if the app process restarts.
 	 *
 	 * @param flicBroadcastReceiverFlags A bitwise-or'ed value of {@link FlicBroadcastReceiverFlags}
 	 * @return true on success, false if manager was in uninitialized state
@@ -122,8 +134,16 @@ public final class FlicButton {
 	/**
 	 * Grab a button exclusivity.
 	 *
-	 * This means that this app is the only one receiving button events.
+	 * This means that this app's callbacks registered by addFlicButtonCallback are the only
+	 * ones receiving button events on this Android device. No actions will be triggered in
+	 * neither the Flic app nor any other app.
 	 * Please release this exclusivity with {@link #releaseExclusivity} when you're done.
+	 *
+	 * A possible use-case for this is if your app is a wake-up alarm, and you want to use the Flic button
+	 * to turn off the alarm. Then light up the screen, bring your activity to the foreground and grab
+	 * button exclusivity. Then when the user presses the button, it will only turn off the alarm
+	 * and not trigger other functionality the user might have assigned the button. Another use-case
+	 * is games where button presses should only control the game and do nothing else.
 	 *
 	 * @return true on success, false if manager was in uninitialized state
 	 */
@@ -174,9 +194,11 @@ public final class FlicButton {
 	}
 
 	/**
-	 * Get the MAC address of this button.
+	 * Get the Bluetooth device address of this button.
 	 *
-	 * @return The MAC address
+	 * Can be used to uniquely identify a button.
+	 *
+	 * @return The address
 	 */
 	public String getButtonId() {
 		return mac;
@@ -245,6 +267,8 @@ public final class FlicButton {
 	 * Set the button to active mode.
 	 *
 	 * This decreases the delay, but will consume more battery power.
+	 * Good for games where it is important with low delays.
+	 * Please unset active mode as soon as you don't need it anymore.
 	 *
 	 * @param activeMode True if to use active mode. False to use passive mode.
 	 * @return True if successful. False if the manager was in uninitialized state.
