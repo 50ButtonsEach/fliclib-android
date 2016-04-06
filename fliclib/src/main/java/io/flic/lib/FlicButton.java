@@ -223,6 +223,26 @@ public final class FlicButton {
 		return BUTTON_DISCONNECTED;
 	}
 
+	/**
+	 * Get the name of this button, as assigned in the Flic app.
+	 * Available in Flic app version >= 2.0
+	 *
+	 * @return The name. If Flic app version is < 2.0 or the user has not entered a name, null is returned.
+	 */
+	public String getName() {
+		checkNotForgotten();
+		synchronized (manager.mIntfLock) {
+			if (manager.mIntf != null) {
+				try {
+					return manager.mIntf.getName(manager.mIntfId, mac);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return null;
+	}
+
 
 	/**
 	 * Get the color of this button.

@@ -22,4 +22,6 @@ interface IFlicLibInterface {
     List<String> listButtons(long id);
     void removeButton(long id, String mac);
     void registerListenForBroadcast(long id, String mac, int flags);
+
+    String getName(long id, String mac);
 }
