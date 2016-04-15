@@ -15,8 +15,20 @@ import java.util.ArrayList;
  * See {@link FlicManager#initiateGrabButton(Activity)}, {@link FlicManager#getButtonByDeviceId(String)} and {@link FlicManager#getKnownButtons()}.
  */
 public final class FlicButton {
+	/**
+	 * The button is disconnected and there is no pending connection to it.
+	 */
 	public static final int BUTTON_DISCONNECTED = 0;
+
+	/**
+	 * The button is currently not connected but there is a pending connection to it.
+	 * When it is in range and is pressed, it will connect.
+	 */
 	public static final int BUTTON_CONNECTION_STARTED = 1;
+
+	/**
+	 * The button is currently connected and button events will arrive immediately when pressed.
+	 */
 	public static final int BUTTON_CONNECTION_COMPLETED = 2;
 
 	boolean forgotten = false;
