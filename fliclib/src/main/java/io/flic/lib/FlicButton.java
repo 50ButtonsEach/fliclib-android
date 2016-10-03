@@ -237,9 +237,8 @@ public final class FlicButton {
 
 	/**
 	 * Get the name of this button, as assigned in the Flic app.
-	 * Available in Flic app version >= 2.0
 	 *
-	 * @return The name. If Flic app version is < 2.0 or the user has not entered a name, null is returned.
+	 * @return The name. Null is returned if name could not be retrieved.
 	 */
 	public String getName() {
 		checkNotForgotten();
@@ -259,7 +258,7 @@ public final class FlicButton {
 	/**
 	 * Get the color of this button.
 	 *
-	 * @return The color as a string. Currently one of "black", "white", "turquoise", "yellow", "green" or "unknown".
+	 * @return The color as a string. Currently one of "black", "white", "turquoise", "yellow", "green" or "unknown". Null is returned if color could not be retrieved.
 	 */
 	public String getColor() {
 		checkNotForgotten();
