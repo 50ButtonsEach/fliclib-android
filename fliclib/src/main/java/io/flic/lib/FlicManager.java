@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.os.Parcel;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -327,6 +326,7 @@ public final class FlicManager {
 		mFlicManagerCallback = flicManagerCallback;
 
 		mDb = new DB(context.getApplicationContext());
+
 		Intent intent = new Intent();
 		intent.setClassName("io.flic.app", "io.flic.app.FlicService");
 		mServiceConnection = new ServiceConnection() {
@@ -337,7 +337,7 @@ public final class FlicManager {
 					try {
 						mIntfId = intf.registerCallback(mCallbackIntf, mAppId, mAppSecret, mAppName);
 						mIntf = intf;
-					} catch (RemoteException e) {
+					} catch (RemoteException | RuntimeException e) {
 						e.printStackTrace();
 					}
 				}
@@ -346,7 +346,7 @@ public final class FlicManager {
 						List<String> verifiedButtons = mDb.getButtons();
 						List<String> addresses = mIntf.listButtons(mIntfId);
 						for (String address : addresses) {
-							if (verifiedButtons.contains(address)) {
+							if (verifiedButtons.contains(address) && !mKnownButtons.containsKey(address)) {
 								mKnownButtons.put(address, new FlicButton(FlicManager.this, address));
 							}
 						}
@@ -354,7 +354,7 @@ public final class FlicManager {
 							mIntf.listenForConnectionCallbacks(mIntfId, button.mac);
 							mIntf.setButtonCallbacks(mIntfId, button.mac, button.callbackFlags);
 						}
-					} catch (RemoteException e) {
+					} catch (RemoteException | RuntimeException e) {
 						e.printStackTrace();
 					}
 				}
