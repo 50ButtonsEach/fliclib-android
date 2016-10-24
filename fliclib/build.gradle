@@ -1,15 +1,17 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "21.1.2"
+    compileSdkVersion flicio_androidCompileSdk
+    buildToolsVersion flicio_androidBuildTools
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 22
+        minSdkVersion flicio_androidMinSdk
+        targetSdkVersion flicio_androidTargetSdk
+
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -20,5 +22,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:22.1.1'
+
+    compile 'com.android.support:appcompat-v7:+'
 }
