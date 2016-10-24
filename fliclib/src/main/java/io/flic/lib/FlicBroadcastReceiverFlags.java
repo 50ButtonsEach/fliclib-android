@@ -5,12 +5,15 @@ package io.flic.lib;
  * If you are concerned about low latencies and performance, only register the flags you actually use.
  * These can be bitwise-or'ed together.
  */
-public class FlicBroadcastReceiverFlags {
-	public static final int NONE = 0;
-	public static final int UP_OR_DOWN = 1;
-	public static final int CLICK_OR_HOLD = 2;
-	public static final int CLICK_OR_DOUBLE_CLICK = 4;
-	public static final int CLICK_OR_DOUBLE_CLICK_OR_HOLD = 8;
-	public static final int REMOVED = 16;
-	public static final int ALL = 31;
+@SuppressWarnings("unused")
+public interface FlicBroadcastReceiverFlags {
+  int NONE = 0;
+
+  int UP_OR_DOWN = 1;
+  int CLICK_OR_HOLD = 2;
+  int CLICK_OR_DOUBLE_CLICK = 4;
+  int CLICK_OR_DOUBLE_CLICK_OR_HOLD = 8;
+  int REMOVED = 16;
+
+  int ALL = UP_OR_DOWN | CLICK_OR_HOLD | CLICK_OR_DOUBLE_CLICK | CLICK_OR_DOUBLE_CLICK_OR_HOLD | REMOVED;
 }
