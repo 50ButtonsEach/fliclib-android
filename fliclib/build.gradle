@@ -23,5 +23,8 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile 'com.android.support:appcompat-v7:+'
+    compile "com.android.support:appcompat-v7:${flicio_supportVersion}"
+
+    /* Compiler/Lint Annotations */
+    compile "com.android.support:support-annotations:${flicio_supportVersion}"
 }

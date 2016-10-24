@@ -23,6 +23,7 @@ allprojects {
         flicio_androidTargetSdk = Integer.parseInt(project.FLICIO_TRG_SDK)
         flicio_androidCompileSdk = Integer.parseInt(project.FLICIO_CPL_SDK)
         flicio_androidBuildTools = project.FLICIO_BUILD_TOOLS
+        flicio_supportVersion = project.FLICIO_ANDROID_SUPPORT_LIB
     }
 }
 
