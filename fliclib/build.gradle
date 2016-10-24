@@ -27,4 +27,9 @@ dependencies {
 
     /* Compiler/Lint Annotations */
     compile "com.android.support:support-annotations:${flicio_supportVersion}"
+
+    /* Lightweight library toolbox for Java and Android Development - https://github.com/android10/arrow */
+    compile("com.fernandocejas:arrow:1.0.0") {
+        exclude group: 'org.jetbrains'
+    }
 }
