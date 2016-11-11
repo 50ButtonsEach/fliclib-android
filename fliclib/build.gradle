@@ -1,4 +1,33 @@
+buildscript {
+    /* Repositories for plugins searching */
+    repositories {
+        jcenter()
+    }
+    /* Dependency to plugins */
+    dependencies {
+        /* bintray.com: https://github.com/bintray/gradle-bintray-plugin */
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:+'
+        /* Allows project artifacts to be deployed to a Maven repository, or installed to the local Maven cache. */
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:+'
+    }
+}
+
+plugins {
+    /* https://github.com/dcendents/android-maven-gradle-plugin */
+    id 'com.github.dcendents.android-maven' version "1.5"
+    /* https://github.com/bintray/gradle-bintray-plugin */
+    id "com.jfrog.bintray" version "1.7"
+}
+
 apply plugin: 'com.android.library'
+
+/* Repositories for libraries search. */
+repositories {
+    jcenter()
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://dl.bintray.com/kucherenko-alex/android" }
+}
 
 android {
     compileSdkVersion flicio_androidCompileSdk
@@ -18,11 +47,65 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    /* EXCLUDE SOME UNNEEDED FILES FROM PACKAGE */
+    packagingOptions {
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+        exclude '.readme'
+        exclude '.README'
+    }
+
+    /* Adjust library output naming */
+    libraryVariants.all { variant ->
+        // if NO FLAVORs than exclude it part from final output name
+        def flavor = (variant.productFlavors.size() == 0) ? "" :
+                "-" + variant.productFlavors[0].name
+
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            def name = variant.buildType.name
+            def fileName = "${flicio_libraryArtifact}-${version}${flavor}-${name}.aar"
+            def jarOutput = "${flicio_libraryArtifact}-${version}${flavor}-${name}.jar"
+
+            // modify output file name
+            if (outputFile != null && outputFile.name.endsWith('.aar')) {
+                output.outputFile = new File(outputFile.parent, fileName)
+
+                // dump into logs final filename
+                def log = "  output: '${fileName}'"
+                rootProject.logger.lifecycle(log)
+            }
+
+            // Create task that will also pack library into a Jar
+            def task = project.tasks.create "jar${variant.name.capitalize()}", Jar
+            task.description = "Create jar artifact ${jarOutput}"
+            task.group = 'Publishing'
+            task.dependsOn variant.javaCompile
+            task.from variant.javaCompile.destinationDir
+            task.destinationDir = project.file("${project.buildDir}/outputs/jar")
+            task.archiveName = jarOutput
+
+            // register task
+            artifacts.add('archives', task);
+        }
+    }
 }
 
+/* Project dependencies */
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
+    /* Android Support Library */
     compile "com.android.support:appcompat-v7:${flicio_supportVersion}"
 
     /* Compiler/Lint Annotations */
@@ -32,4 +115,128 @@ dependencies {
     compile("com.fernandocejas:arrow:1.0.0") {
         exclude group: 'org.jetbrains'
     }
+}
+
+/* [ ARTIFACTS ] ==================================================================================================== */
+
+/* io.flic */
+group = flicio_libraryGroup
+
+/* set output binary version. format: {versionName}.{versionCode}.{gitRevision} */
+version = android.defaultConfig.versionName + "." + android.defaultConfig.versionCode + ".${flicio_git_revision}"
+
+/* https://github.com/bintray/bintray-examples/blob/master/gradle-aar-example/build.gradle */
+bintray {
+    /* Set to False for making publishing a real thing. */
+    dryRun = flicio_dryRun
+
+    //apiUrl = "https://api.bintray.net"
+    user = flicio_userName
+    key = flicio_bintrayApiKey
+    configurations = ['archives']
+
+    /*
+    curl -T <FILE.EXT> -ukucherenko-alex:<API_KEY>
+      https://api.bintray.com/content/kucherenko-alex/android/<UR_COOL_PACKAGE_NAME>/<VERSION_NAME>/<FILE_TARGET_PATH>
+    */
+    pkg {
+        repo = 'android' /* Hardcoded!!! Create repository first in Bintray Admin UI! */
+        name = "${flicio_libraryGroup}:${flicio_libraryArtifact}" /* io.flic:sdk */
+        desc = flicio_libraryDesc
+
+        websiteUrl = flicio_libraryUrl
+        issueTrackerUrl = "${flicio_libraryUrl}/issues"
+        vcsUrl = flicio_libraryGit
+
+        licenses = ['Apache-2.0']
+        labels = ['aar', 'android', 'sdk', 'flic.io']
+
+        publicDownloadNumbers = true
+    }
+}
+bintrayUpload.onlyIf { flicio_allowPublishing }
+
+/* Install package(s) to maven repository. */
+install {
+    repositories.mavenInstaller {
+        /* POM.xml file generation. */
+        pom {
+            project {
+                packaging "${flicio_libraryPkg}"
+                name flicio_libraryName
+                description flicio_libraryDesc
+                url flicio_libraryUrl
+                artifactId flicio_libraryArtifact
+
+                /* Publishing License */
+                licenses {
+                    license {
+                        name flicio_libraryLicense
+                        url flicio_libraryLicenseUrl
+                        distribution 'repo'
+                    }
+                }
+                /* Developers of the library */
+                developers {
+                    developer {
+                        id flicio_userName
+                        name flicio_userFull
+                        email flicio_userEmail
+                    }
+                }
+                /* Source Code Management Info */
+                scm {
+                    url "scm:${flicio_libraryGit}"
+                    connection "scm:${flicio_libraryGit}"
+                    developerConnection "scm:${flicio_libraryGit}"
+                }
+            }
+        }
+    }
+}
+install.onlyIf { flicio_allowPublishing }
+
+/** Source code packaging to JAR. */
+task sourcesJar(type: Jar) {
+    description = 'Compose sources archive'
+    group = 'publishing'
+    onlyIf { flicio_allowPublishing }
+
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+/** JavaDoc generation, required for fully published package. */
+task generateJavadoc(type: Javadoc) {
+    description = 'Generate JavaDoc from sources'
+    group = 'publishing'
+    onlyIf { flicio_allowPublishing }
+
+    source = android.sourceSets.main.java.srcDirs
+    exclude '**/R.html', '**/R.*.html', '**/index.html'
+    //classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += files("${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")
+    classpath += files("${android.sdkDirectory}/extras/android/support/annotations/android-support-annotations.jar")
+    options {
+        links "http://docs.oracle.com/javase/7/docs/api/"
+        linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
+    }
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+/** Pack JavaDoc generated files into JAR. */
+task javadocJar(type: Jar, dependsOn: generateJavadoc) {
+    description = 'Compose JavaDoc archive'
+    group = 'publishing'
+    onlyIf { flicio_allowPublishing }
+
+    classifier = 'javadoc'
+    from generateJavadoc.destinationDir
+}
+
+/* Attach publishing tasks to archives configuration/artifacts. */
+artifacts {
+    /* The Java plug-in introduces six configurations: archives, default, compile, runtime, testCompile, testRuntime */
+    archives javadocJar
+    archives sourcesJar
 }

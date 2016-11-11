@@ -12,18 +12,62 @@ buildscript {
     }
 }
 
+/** get Git revision as a NUMBER (subversion style of revision). */
+def gitRevision() {
+    return "git rev-list --count HEAD".execute().text.trim();
+}
+
 allprojects {
+    /* All projects should search dependencies on jCenter server. */
     repositories {
         jcenter()
     }
-
+    /* Declare global variables. */
     ext {
+        /* Use git revision number as a unique auto-incremented, always forward value. */
+        flicio_git_revision = gitRevision()
+
         /* Keep unique name, so it will be possible to override them in root project. */
         flicio_androidMinSdk = Integer.parseInt(project.FLICIO_MIN_SDK)
         flicio_androidTargetSdk = Integer.parseInt(project.FLICIO_TRG_SDK)
         flicio_androidCompileSdk = Integer.parseInt(project.FLICIO_CPL_SDK)
         flicio_androidBuildTools = project.FLICIO_BUILD_TOOLS
         flicio_supportVersion = project.FLICIO_ANDROID_SUPPORT_LIB
+
+        flicio_allowPublishing = Boolean.parseBoolean(project.FLICIO_ALLOW_PUBLISHING)
+        flicio_dryRun = Boolean.parseBoolean(project.FLICIO_PUBLISHING_DRY_RUN)
+
+        /* Maven Publishing - Bintray Credentials */
+        flicio_userName = project.FLICIO_USER_NAME
+        flicio_userEmail = project.FLICIO_USER_EMAIL
+        flicio_userFull = project.FLICIO_USER_FULL
+        flicio_bintrayApiKey = project.FLICIO_BINTRAY_API_KEY
+
+        /* Maven Publishing - Library Meta Info */
+        flicio_libraryPkg = project.FLICIO_LIBRARY_PKG
+        flicio_libraryGroup = project.FLICIO_LIBRARY_GROUP
+        flicio_libraryArtifact = project.FLICIO_LIBRARY_ARTIFACT
+        flicio_libraryName = project.FLICIO_LIBRARY_NAME
+        flicio_libraryDesc = project.FLICIO_LIBRARY_DESC
+        flicio_libraryUrl = project.FLICIO_LIBRARY_URL
+        flicio_libraryGit = project.FLICIO_LIBRARY_GIT
+        flicio_libraryLicense = project.FLICIO_LIBRARY_LIC
+        flicio_libraryLicenseUrl = project.FLICIO_LIBRARY_LIC_URL
+        flicio_publishingDryRun = Boolean.parseBoolean(project.FLICIO_PUBLISHING_DRY_RUN)
+
+    }
+
+    /* Adjust Java tasks compilation options. */
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_1_7
+        targetCompatibility = JavaVersion.VERSION_1_7
+
+        // report all Java errors even if the IDE does not
+        configure(options) {
+            compilerArgs << '-Xlint:all' << '-Xlint:-options'
+            deprecation = true
+            encoding = 'UTF-8'
+        }
     }
 }
 
