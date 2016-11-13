@@ -39,13 +39,14 @@ class DB extends SQLiteOpenHelper {
 		SQLiteDatabase db = this.getWritableDatabase();
 		ArrayList<String> list = new ArrayList<>();
 		Cursor query = db.query(BUTTONS_TABLE_NAME, null, null, null, null, null, null);
-		query.moveToFirst();
-		if (!query.isAfterLast()) {
+
+		if (query.moveToFirst() && !query.isAfterLast()) {
 			do {
 				String mac = query.getString(query.getColumnIndex("mac"));
 				list.add(mac);
 			} while(query.moveToNext());
 		}
+
 		query.close();
 		db.close();
 
