@@ -37,7 +37,7 @@ public final class FlicButton {
 
   /* package */ final FlicManager manager;
   /* package */ final String mac;
-  /* package */ final ArrayList<FlicButtonCallback> callbacks = new ArrayList<>();
+  /* package */ @NonNull final ArrayList<FlicButtonCallback> callbacks = new ArrayList<>();
   /* package */ int callbackFlags = FlicButtonCallbackFlags.ALL;
   /* package */ boolean forgotten = false;
 

@@ -35,6 +35,7 @@ import java.util.List;
  * This is a singleton class used to communicate with the Flic Application.
  * Use {@link FlicManager#getInstance(Context, FlicManagerInitializedCallback, FlicManagerUninitializedCallback)} or {@link FlicManager#getInstance(Context, FlicManagerInitializedCallback)} to retrieve a manager.
  */
+@SuppressWarnings({"unused"})
 public final class FlicManager {
   /** Class log tag. */
   /* package */ static final String TAG = "FlicManager";
@@ -191,7 +192,7 @@ public final class FlicManager {
 
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onConnectionStarted(button);
           }
         }
@@ -204,7 +205,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onConnectionCompleted(button);
           }
         }
@@ -217,7 +218,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onDisconnect(button);
           }
         }
@@ -230,7 +231,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onConnectionFailed(button, status);
           }
         }
@@ -243,7 +244,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onReadRemoteRSSI(button, rssi, status);
           }
         }
@@ -257,7 +258,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onButtonUpOrDown(button, wasQueued, timeDiff, action == 0, action == 1);
           }
         }
@@ -270,7 +271,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onButtonClickOrHold(button, wasQueued, timeDiff, action == 0, action == 1);
           }
         }
@@ -283,7 +284,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onButtonSingleOrDoubleClick(button, wasQueued, timeDiff, action == 0, action == 1);
           }
         }
@@ -296,7 +297,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onButtonSingleOrDoubleClickOrHold(button, wasQueued, timeDiff, action == 0, action == 1, action == 2);
           }
         }
@@ -309,7 +310,7 @@ public final class FlicManager {
       FlicButton button = synchronizedGetButton(mac);
       if (button != null) {
         synchronized (button.callbacks) {
-          for (FlicButtonCallback cb : (ArrayList<FlicButtonCallback>) button.callbacks.clone()) {
+          for (FlicButtonCallback cb : new ArrayList<>(button.callbacks)) {
             cb.onButtonRemoved(button);
           }
         }
@@ -523,13 +524,13 @@ public final class FlicManager {
       rsaSigner.update(Utils.hexToBytes(buttonUuid));
       signatureOk = rsaSigner.verify(signature);
     } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
+      Log.e(TAG, "NoSuchAlgorithmException", e);
     } catch (InvalidKeySpecException e) {
-      e.printStackTrace();
+      Log.e(TAG, "InvalidKeySpecException", e);
     } catch (SignatureException e) {
-      e.printStackTrace();
+      Log.e(TAG, "SignatureException", e);
     } catch (InvalidKeyException e) {
-      e.printStackTrace();
+      Log.e(TAG, "InvalidKeyException", e);
     }
 
     if (!signatureOk) {
