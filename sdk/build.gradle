@@ -211,8 +211,12 @@ task generateJavadoc(type: Javadoc) {
     description = 'Generate JavaDoc from sources'
     group = 'publishing'
     onlyIf { flicio_allowPublishing }
+    failOnError false
 
+    // add sources of the library + AIDL generated files
     source = android.sourceSets.main.java.srcDirs
+    source += fileTree(dir: "${project.buildDir}/generated/source/aidl/release")
+
     exclude '**/R.html', '**/R.*.html', '**/index.html'
     //classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     classpath += files("${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")
@@ -222,6 +226,10 @@ task generateJavadoc(type: Javadoc) {
         linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
     }
     options.addStringOption('Xdoclint:none', '-quiet')
+}
+/* Help javadoc task in resolving dependencies needed for documentation generation. */
+afterEvaluate {
+    generateJavadoc.classpath += project.android.libraryVariants.toList().first().javaCompile.classpath
 }
 
 /** Pack JavaDoc generated files into JAR. */
