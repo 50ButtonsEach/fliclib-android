@@ -433,15 +433,14 @@ public final class FlicManager {
 	}
 
 	/**
-	 * Initiate a grab button sequence.
+	 * Initiate a grab button sequence manually.
 	 *
-	 * Call this method to ask the Flic app to retrieve a button object.
-	 * This calls startActivityForResult with the request code {@link FlicManager#GRAB_BUTTON_REQUEST_CODE}.
-	 * The result retrieved in onActivityResult for currentActivity must be sent to the completeGrabButton method.
+	 * Same as {@link #initiateGrabButton(Activity)} but only generates the intent used to start the Flic Grabber activity.
+	 * Use this method only if you have a custom way of starting activities.
 	 *
-	 * @param currentActivity The current activity initiating the button grabbing.
+	 * @return An intent
 	 */
-	public void initiateGrabButton(Activity currentActivity) {
+	public Intent createIntentForInitiateGrabButton() {
 		Intent intent = new Intent("io.flic.app.GrabButton");
 		intent.setPackage("io.flic.app");
 		byte[] secretKey = new byte[32];
@@ -453,7 +452,20 @@ public final class FlicManager {
 		intent.putExtra("intfId", mIntfId);
 		intent.putExtra("appId", mAppId);
 		intent.putExtra("appSecret", mAppSecret);
-		currentActivity.startActivityForResult(intent, GRAB_BUTTON_REQUEST_CODE);
+		return intent;
+	}
+
+	/**
+	 * Initiate a grab button sequence.
+	 *
+	 * Call this method to ask the Flic app to retrieve a button object.
+	 * This calls startActivityForResult with the request code {@link FlicManager#GRAB_BUTTON_REQUEST_CODE}.
+	 * The result retrieved in onActivityResult for currentActivity must be sent to the {@link #completeGrabButton(int, int, Intent)} method.
+	 *
+	 * @param currentActivity The current activity initiating the button grabbing.
+	 */
+	public void initiateGrabButton(Activity currentActivity) {
+		currentActivity.startActivityForResult(createIntentForInitiateGrabButton(), GRAB_BUTTON_REQUEST_CODE);
 	}
 
 	/**
