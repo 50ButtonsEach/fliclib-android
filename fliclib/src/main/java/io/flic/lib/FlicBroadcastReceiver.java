@@ -14,7 +14,7 @@ import android.util.Log;
 public abstract class FlicBroadcastReceiver extends BroadcastReceiver {
 	private static final String TAG = "FlicBroadcastReceiver";
 
-	public final void onReceive(final Context context, final Intent intent) {
+	public void onReceive(final Context context, final Intent intent) {
 		if (!FlicManager.hasSetAppCredentials()) {
 			onRequestAppCredentials(context);
 		}
